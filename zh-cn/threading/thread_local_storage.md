@@ -89,4 +89,4 @@ int main(int argc, char*  argv[]) {
 //-----------------------------------------------
 // used time: 187
 ```
-可以看到代码运行的时间大概是会在187毫秒左右(我电脑I7-8750H, 6核12线程), 可以看到get_thread_info_index是一个非常耗时的函数,而且时间基本消耗在重复性的调用get_thread_info_index(GetCurrentThreadId())这里;, 如果我们用TLS把这个索引给缓存一下, 就只需要调用一次get_thread_info_index就行了。
+可以看到代码运行的时间大概是会在187毫秒左右(我电脑I7-8750H, 6核12线程)。get_thread_info_index是一个非常耗时的函数,而且时间基本消耗在重复性的调用get_thread_info_index(GetCurrentThreadId())这里;, 如果我们用TLS把这个索引给缓存一下, 就只需要调用一次get_thread_info_index就行了。
