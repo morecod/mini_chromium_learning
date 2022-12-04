@@ -71,7 +71,7 @@ int main(int argc, char*  argv[]) {
 
   DWORD start_time = timeGetTime();
 
-  // 创建200个线程来运行, 前100个线程故意泄露内存
+  // 创建50个线程来运行, 前30个线程故意泄露内存
   for (int i = 0; i < 50; i++) {
     thread_handle[i] = CreateThread(
         NULL, NULL, thread_proc, (LPVOID)(i < 30 ? TRUE : FALSE), 0, NULL);
@@ -89,4 +89,4 @@ int main(int argc, char*  argv[]) {
 //-----------------------------------------------
 // used time: 187
 ```
-可以看到代码运行的时间大概是会在187毫秒左右(我电脑I7-8750H, 6核12线程)。get_thread_info_index是一个非常耗时的函数,而且时间基本消耗在重复性的调用get_thread_info_index(GetCurrentThreadId())这里;, 如果我们用TLS把这个索引给缓存一下, 就只需要调用一次get_thread_info_index就行了。
+可以看到代码运行的时间大概是会在187毫秒左右(我电脑I7-8750H, 6核12线程)。get_thread_info_index是一个非常耗时并且堵塞性的函数, 在线程里重复性的调用这个函数严重的影响了代码运行效率, 如果我们用TLS把这个索引给缓存一下, 就只需要调用一次get_thread_info_index就行了。
