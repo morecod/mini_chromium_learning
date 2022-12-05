@@ -14,7 +14,7 @@
 ![text](thread_local_storage_chromium.png)  
 具体来说做了这么些事情:
 - 跟进程申请了一个TLS索引来在线程里储存在它自己的TlsVerctorEntry数组地址。
-- 申明了一个TlsMetadata类型的全局数组, 来对所有线程下的TlsVerctorEntry数组进行槽分配。
+- 申明了一个TlsMetadata类型的全局数组, 来对所有线程下的TlsVerctorEntry成员进行槽分配。
 - 设置或者获取线程变量的时候, 它先通过跟进程申请来的TLS索引来找到或者创建对应线程的TlsVerctorEntry数组, 然后再通过它自己分配的槽来找到对应的TlsVerctorEntry并且对data进行读写, 如果槽版本跟找到的TlsVerctorEntry里的版本对不上的话就说明这个槽过期了, 操作就会不成功。
 - 注册了线程销毁回调, 线程销毁的时候, 找个每个TlsVerctorEntry成员对应的TlsMetadata, 通过destructor来释放用数据(如果在申请这个槽的时候提供了用户数据销毁方法的话), 然后释放该线程下的TlsVerctorEntry数组。
 - 在用完释放了一个槽后, 这个槽对应的TlsMetadata的使用版本将会 +1
