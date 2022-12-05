@@ -12,3 +12,8 @@
 #### Chromium的TLS
 &emsp;&emsp;从上面的设计图可以看到线程的TLS空间范围是系统自定的, 在不同的平台下极有可能是不一致的, 这也会影响软件的跨平台稳定性, 因此Chromium基于系统的TLS(只用了一个槽)自己包装了一套应用层的TLS, 设计思想也跟上面的差不多, 这样它就可以保证每个平台下的线程TLS空间是一致的。它的设计大概就下面这样的:  
 ![text](thread_local_storage_chromium.png)  
+具体来说做了这么些事情:
+- 跟进程申请了一个TLS槽用来在线程里储存在它自己的TlsVerctorEntry数组地址。
+- 申明了一个TlsMetadata类型的全局数组, 来对TlsVerctorEntry的数组索引进行分配管理。
+- 设置或者获取线程变量的时候, 它先通过跟进程申请来的TLS槽来找到对应线程的TlsVerctorEntry数组, 然后再通过它自己分配的索引来找到对应的TlsVerctorEntry对data进行读写。
+- 注册了进程的线程销毁回调, 线程销毁的时候, 找个每个TlsVerctorEntry成员对应的TlsMetadata, 通过destructor来释放用数据(如果这个用户数据是一个对象指针的话)。
