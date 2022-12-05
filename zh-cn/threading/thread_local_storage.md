@@ -128,3 +128,4 @@ thread_name:xiaohong, alloc_bytes:80, free_bytes:0,leaked
 thread_name:gouzi, alloc_bytes:80, free_bytes:0,leaked
 Press any key to continue . . .
 ```
+如果你在线程里用的数据是简单的char, short, int, void*类型, 那么你可以直接简单使用ThreadLocalPointer<Type>就够了。
