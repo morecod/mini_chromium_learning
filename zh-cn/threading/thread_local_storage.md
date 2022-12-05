@@ -20,7 +20,7 @@
 - 在用完释放了一个槽后, 这个槽对应的TlsMetadata的使用版本将会 +1
 
 #### 使用Chromium的TLS
-&emsp;&emsp;Chromium的TLS操作设计的很完美也很简单, 我们只需要关心槽的申明和使用就可以了。我们写一个统计线程内存使用的例子:  
+&emsp;&emsp;Chromium的TLS操作设计的很完美也很简单, 我们只需要关心槽的申明和使用就可以了。下面是一个使用Chromium的槽实现的统计线程内存的例子:  
 ```c++
 #include <iostream>
 #include <string>
