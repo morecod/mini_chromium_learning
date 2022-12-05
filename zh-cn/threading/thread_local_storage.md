@@ -65,6 +65,7 @@ class ThreadLocalMemoryUsage {
 ThreadLocalMemoryUsage g_tls_mem;
 
 void thread_proc_inner(bool do_leak) {
+  // 读取线程数据
   ThreadLocalMemoryUsage::Info* info = g_tls_mem.Get();
   if (info != nullptr) {
     char* mem = new char[16];
@@ -77,6 +78,7 @@ void thread_proc_inner(bool do_leak) {
 }
 
 void thread_proc(ThreadLocalMemoryUsage::Info* info, bool do_leak) {
+  // 先给线程设置数据
   g_tls_mem.Set(info);
 
   for (int i = 0; i < 5; i++) {
@@ -87,18 +89,21 @@ void thread_proc(ThreadLocalMemoryUsage::Info* info, bool do_leak) {
 ////////////////////////////////////////////////////////////////////////////////
 
 int main(int argc, char* argv[]) {
+  // 运行一个内存安全的线程
   ThreadLocalMemoryUsage::Info* t1 = new ThreadLocalMemoryUsage::Info;
   t1->name = "Lili";
   t1->alloc_bytes = 0;
   t1->free_bytes = 0;
   std::thread thread1(thread_proc, t1, false);
 
+  // 运行一个泄露内存的线程
   ThreadLocalMemoryUsage::Info* t2 = new ThreadLocalMemoryUsage::Info;
   t2->name = "xiaohong";
   t2->alloc_bytes = 0;
   t2->free_bytes = 0;
   std::thread thread2(thread_proc, t2, true);
 
+  // 运行一个泄露内存的线程
   ThreadLocalMemoryUsage::Info* t3 = new ThreadLocalMemoryUsage::Info;
   t3->name = "gouzi";
   t3->alloc_bytes = 0;
@@ -113,3 +118,10 @@ int main(int argc, char* argv[]) {
   return 0;
 }
 ``` 
+打印结果:  
+```
+thread_name:Lili, alloc_bytes:80, free_bytes:80,safety
+thread_name:xiaohong, alloc_bytes:80, free_bytes:0,leaked
+thread_name:gouzi, alloc_bytes:80, free_bytes:0,leaked
+Press any key to continue . . .
+```
