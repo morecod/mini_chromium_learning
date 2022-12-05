@@ -16,4 +16,4 @@
 - 跟进程申请了一个TLS槽用来在线程里储存在它自己的TlsVerctorEntry数组地址。
 - 申明了一个TlsMetadata类型的全局数组, 来对TlsVerctorEntry的数组索引进行分配管理。
 - 设置或者获取线程变量的时候, 它先通过跟进程申请来的TLS槽来找到对应线程的TlsVerctorEntry数组, 然后再通过它自己分配的索引来找到对应的TlsVerctorEntry对data进行读写。
-- 注册了进程的线程销毁回调, 线程销毁的时候, 找个每个TlsVerctorEntry成员对应的TlsMetadata, 通过destructor来释放用数据(如果这个用户数据是一个对象指针的话)。
+- 注册了进程的线程销毁回调, 线程销毁的时候, 找个每个TlsVerctorEntry成员对应的TlsMetadata, 通过destructor来释放用数据(如果在申请这个槽的时候提供了销毁方法的话)。
