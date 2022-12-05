@@ -20,8 +20,96 @@
 - 在用完释放了一个槽后, 这个槽对应的TlsMetadata的使用版本将会 +1
 
 #### 使用Chromium的TLS
-&emsp;&emsp;Chromium的TLS类设计的很完美也很简单, 它给我们提供了ThreadLocalPointer, ThreadLocalBool这两种操作类。
-我们只要按需申请其中一个类型的全局变量就可以在所有线程的内部使用了。看下面一个例子:  
+&emsp;&emsp;Chromium的TLS操作的很完美也很简单, 我们只需要关心槽的申明和使用就可以了。我们写一个统计线程内存使用的例子:  
 ```c++
-#
+#include <iostream>
+#include <string>
+#include <thread>
+
+#include "winbase/macros.h"
+#include "winbase/threading/thread_local.h"
+#include "winbase/threading/thread_local_storage.h"
+#include "winbase/win/import_lib.cc"  // 导入系统静态库
+
+////////////////////////////////////////////////////////////////////////////////
+
+class ThreadLocalMemoryUsage {
+ public:
+  struct Info {
+    std::string name;
+    size_t alloc_bytes;
+    size_t free_bytes;
+
+    static void OnDelete(void* ptr) {
+      Info* info = static_cast<Info*>(ptr);
+
+      std::cout 
+          << "thread_name:" << info->name << ", "
+          << "alloc_bytes:" << info->alloc_bytes << ", "
+          << "free_bytes:" << info->free_bytes << ","
+          << (info->alloc_bytes > info->free_bytes ? "leaked" : "safety") 
+          << std::endl;
+      delete info; 
+    }
+  };
+
+  Info* Get() { return static_cast<Info*>(slot_.Get()); }
+  void Set(Info* info) { slot_.Set(info); }
+
+ private:
+  winbase::ThreadLocalStorage::Slot slot_{Info::OnDelete};
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+ThreadLocalMemoryUsage g_tls_mem;
+
+void thread_proc_inner(bool do_leak) {
+  ThreadLocalMemoryUsage::Info* info = g_tls_mem.Get();
+  if (info != nullptr) {
+    char* mem = new char[16];
+    info->alloc_bytes += 16;
+    if (!do_leak) {
+      delete[] mem;
+      info->free_bytes += 16;
+    }
+  }
+}
+
+void thread_proc(ThreadLocalMemoryUsage::Info* info, bool do_leak) {
+  g_tls_mem.Set(info);
+
+  for (int i = 0; i < 5; i++) {
+    thread_proc_inner(do_leak);
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+int main(int argc, char* argv[]) {
+  ThreadLocalMemoryUsage::Info* t1 = new ThreadLocalMemoryUsage::Info;
+  t1->name = "Lili";
+  t1->alloc_bytes = 0;
+  t1->free_bytes = 0;
+  std::thread thread1(thread_proc, t1, false);
+
+  ThreadLocalMemoryUsage::Info* t2 = new ThreadLocalMemoryUsage::Info;
+  t2->name = "xiaohong";
+  t2->alloc_bytes = 0;
+  t2->free_bytes = 0;
+  std::thread thread2(thread_proc, t2, true);
+
+  ThreadLocalMemoryUsage::Info* t3 = new ThreadLocalMemoryUsage::Info;
+  t3->name = "gouzi";
+  t3->alloc_bytes = 0;
+  t3->free_bytes = 0;
+  std::thread thread3(thread_proc, t3, true);
+
+  thread1.join();
+  thread2.join();
+  thread3.join();
+
+  system("pause");
+  return 0;
+}
 ``` 
