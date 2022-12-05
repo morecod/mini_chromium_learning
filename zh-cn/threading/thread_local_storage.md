@@ -63,6 +63,8 @@ class ThreadLocalMemoryUsage {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// 要保证所有用这个槽的线程的生命周期比这个槽短
+// 因此槽通常是申明成全局的
 ThreadLocalMemoryUsage g_tls_mem;
 
 void thread_proc_inner(bool do_leak) {
