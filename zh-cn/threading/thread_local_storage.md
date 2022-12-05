@@ -20,7 +20,7 @@
 - 在用完释放了一个槽后, 这个槽对应的TlsMetadata的使用版本将会 +1
 
 #### 使用Chromium的TLS
-&emsp;&emsp;Chromium的TLS操作的很完美也很简单, 我们只需要关心槽的申明和使用就可以了。我们写一个统计线程内存使用的例子:  
+&emsp;&emsp;Chromium的TLS操作设计的很完美也很简单, 我们只需要关心槽的申明和使用就可以了。我们写一个统计线程内存使用的例子:  
 ```c++
 #include <iostream>
 #include <string>
@@ -40,6 +40,7 @@ class ThreadLocalMemoryUsage {
     size_t alloc_bytes;
     size_t free_bytes;
 
+    // 提供给线程退出的时候调用
     static void OnDelete(void* ptr) {
       Info* info = static_cast<Info*>(ptr);
 
@@ -96,14 +97,14 @@ int main(int argc, char* argv[]) {
   t1->free_bytes = 0;
   std::thread thread1(thread_proc, t1, false);
 
-  // 运行一个泄露内存的线程
+  // 运行一个内存泄漏的线程
   ThreadLocalMemoryUsage::Info* t2 = new ThreadLocalMemoryUsage::Info;
   t2->name = "xiaohong";
   t2->alloc_bytes = 0;
   t2->free_bytes = 0;
   std::thread thread2(thread_proc, t2, true);
 
-  // 运行一个泄露内存的线程
+  // 运行一个内存泄漏的线程
   ThreadLocalMemoryUsage::Info* t3 = new ThreadLocalMemoryUsage::Info;
   t3->name = "gouzi";
   t3->alloc_bytes = 0;
