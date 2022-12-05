@@ -41,7 +41,7 @@ class ThreadLocalMemoryUsage {
     size_t free_bytes;
 
     // 提供给线程退出的时候调用
-    static void OnDelete(void* ptr) {
+    static void OnPerThreadExit(void* ptr) {
       Info* info = static_cast<Info*>(ptr);
 
       std::cout 
@@ -58,7 +58,8 @@ class ThreadLocalMemoryUsage {
   void Set(Info* info) { slot_.Set(info); }
 
  private:
-  winbase::ThreadLocalStorage::Slot slot_{Info::OnDelete};
+  // 我们在Info::OnPerThreadExit这里删除我们申请的Info对象
+  winbase::ThreadLocalStorage::Slot slot_{Info::OnPerThreadExit};
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -92,7 +93,7 @@ void thread_proc(ThreadLocalMemoryUsage::Info* info, bool do_leak) {
 ////////////////////////////////////////////////////////////////////////////////
 
 int main(int argc, char* argv[]) {
-  // 运行一个内存安全的线程
+  // 运行一个内存安全的线程, t1 会在Info::OnPerThreadExit销毁
   ThreadLocalMemoryUsage::Info* t1 = new ThreadLocalMemoryUsage::Info;
   t1->name = "Lili";
   t1->alloc_bytes = 0;
